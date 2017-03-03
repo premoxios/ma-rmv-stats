@@ -28,7 +28,7 @@ import strict_rfc3339
 #
 # To collect data on a regular schedule via cron, add a crontab entry as, e.g.,
 # $ sudo sh -c 'echo "2,7,12,17,22,27,32,37,42,47,52,57 * * * * root \
-# $  source /[PATH]/ma-rmv-stats/virtenv/bin/activate && \
+# $  . /[PATH]/ma-rmv-stats/virtenv/bin/activate && \
 # $  python /[PATH]/ma-rmv-stats/ma_rmv_stats.py --project_id [PROJECT_ID] >> \
 # $  /var/log/rmv.log" >> /etc/crontab'
 #
