@@ -9,12 +9,11 @@ To run this script on a GCP instance:
 * `ssh` into the instance.
 * Execute the following:
   ```  
-  $ sudo apt-get install git python-pip
+  $ sudo apt-get install git python3-pip
   $ git clone https://github.com/premoxios/ma-rmv-stats.git
   $ cd ma-rmv-stats
-  $ sudo pip install --upgrade pip virtualenv
-  $ virtualenv virtenv
-  $ source virtenv/bin/activate
+  $ python3 -m venv ~/venv/rmv
+  $ source ~/venv/rmv/bin/activate
   $ pip install -r requirements.txt
   $ python ma-rmv-stats.py --project_id [PROJECT_ID]
   ```

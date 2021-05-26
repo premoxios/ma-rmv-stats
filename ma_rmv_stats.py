@@ -2,7 +2,6 @@ import argparse
 import requests
 import time
 import xml.etree.ElementTree as ET
-from string import split
 
 from apiclient import discovery
 from apiclient import errors
@@ -10,11 +9,11 @@ from oauth2client.client import GoogleCredentials
 import strict_rfc3339
 
 #
-# Query Massachusetts RMV wait times and publish to Stackdriver as custom metrics.
+# Query Massachusetts RMV wait times and publish to GCP Cloud Monitoring as custom metrics.
 #
 
 MA_RMV_WAIT_TIME_CUSTOM_METRIC_TYPE = "custom.googleapis.com/ma_rmv_wait_time"
-MA_RMV_WAIT_TIME_API = "http://www.massdot.state.ma.us/feeds/qmaticxml/qmaticXML.aspx"
+MA_RMV_WAIT_TIME_API = "https://dotfeeds.state.ma.us/api/RMVBranchWaitTime/Index"
 
 def get_client():
     """Builds an http client authenticated with the service account credentials."""
@@ -58,7 +57,7 @@ def create_metric_descriptor(api_client, project_id):
             "service type and branch.",
         }
     try:
-        print "Creating metric descriptor."
+        print("Creating metric descriptor.")
         request = api_client.projects().metricDescriptors().create(
             name="projects/%s" % project_id, body=md_definition)
         response = request.execute()
@@ -125,7 +124,7 @@ def query_wait_time(api_client, project_id, branch=None, service=None):
         name="projects/%s" % project_id, filter=query_filter,
         interval_endTime=end_rfc3339, interval_startTime=start_rfc3339)
     response = request.execute()
-    print "Query result: %s" % response
+    print("Query result: %s" % response)
 
 def get_ma_rmv_wait_times():
     """Queries MA RMV wait time API and parses results.
@@ -134,13 +133,12 @@ def get_ma_rmv_wait_times():
     in minutes as a float.
     """
     def parse_wait_time(time_val):
-        if time_val in ['Error', 'Closed']:
+        if time_val in ['Unavailable', 'Error', 'Closed']:
             return 0
-        vals = split(time_val, ':')
+        vals = time_val.split(':')
         return int(vals[0])*60 + int(vals[1]) + float(vals[2])/60
 
     r = requests.get(MA_RMV_WAIT_TIME_API)
-
     rmv_waits = {}
     branches = ET.fromstring(r.text)
     for branch in branches:
@@ -156,7 +154,7 @@ def get_ma_rmv_wait_times():
 
 def write_ma_rmv_wait_times(api_client, project_id,
                             ma_rmv_wait_times, timestamp):
-    for branch, branch_info in ma_rmv_wait_times.iteritems():
+    for branch, branch_info in ma_rmv_wait_times.items():
         for service in ["licensing", "registration", ]:
             write_data_point(api_client, project_id, branch, service,
                              timestamp, branch_info[service])
@@ -171,7 +169,7 @@ if __name__ == "__main__":
     now = int(time.time())
     now_rfc3339 = strict_rfc3339.timestamp_to_rfc3339_utcoffset(now) 
     
-    print "Running: time=%s" % now_rfc3339
+    print("Running: time=%s" % now_rfc3339)
     ma_rmv_wait_times = get_ma_rmv_wait_times()
 
     api_client = get_client()
